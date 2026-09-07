@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Indy Wrestling</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    body {
+      background: #050b14 url('logo.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    .main-wrapper {
+      width: 100%;
+      max-width: 1350px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .vista { display: none; width: 100%; }
+    .vista-activa { display: flex; width: 100%; justify-content: center; }
+
+    .layout-mapa {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    @media (min-width: 992px) {
+      .layout-mapa {
+        flex-direction: row;
+        align-items: stretch;
+      }
+    }
+
+    .left-panel {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(13, 38, 15, 0.95);
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 992px) {
+      .left-panel { flex: 1.4; max-width: none; margin: 0; }
+    }
+
+    .left-panel h2 { text-align: center; margin-bottom: 2px; font-size: 1.2rem; }
+
+    .right-panel {
+      width: 100%;
+      max-width: 520px;
+      background: #0d1626;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 992px) {
+      .right-panel { flex: 0.85; max-width: none; min-width: 320px; margin: 0; }
+    }
+
+    .panel-formulario {
+      background: #0d1626;
+      border: 1px solid rgba(56, 239, 125, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .subtitulo { color: #a0aec0; font-size: 0.72rem; margin-bottom: 4px; text-align: center; }
+
+    .arena-outer-layout {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto auto auto;
+      gap: 2px;
+      align-items: center;
+      justify-content: start;
+      background: #080d1a;
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 239, 125, 0.2);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .grada-banner {
+      background: #1b4332;
+      border: 1px solid #2ecc71;
+      color: #2ecc71;
+      font-weight: bold;
+      border-radius: 4px;
+      font-size: 0.52rem;
+      text-align: center;
+      padding: 3px;
+      box-shadow: 0 0 6px rgba(46, 204, 113, 0.2);
+      white-space: nowrap;
+    }
+
+    .grada-horiz { grid-column: 2; width: 100%; }
+
+    .grada-vert {
+      writing-mode: vertical-lr;
+      transform: rotate(180deg);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 2px;
+    }
+
+    .grada-poniente { grid-column: 1; grid-row: 2; }
+    .grada-oriente { grid-column: 3; grid-row: 2; }
+
+    .arena-container {
+      grid-column: 2;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto auto auto;
+      gap: 2px;
+      align-items: center;
+      justify-items: center;
+      justify-content: center;
+      align-content: center;
+      padding: 0;
+    }
+
+    .ring-box {
+      grid-column: 2;
+      grid-row: 2;
+      width: 75px;
+      height: 75px;
+      border: 2px solid #38ef7d;
+      background: #161f33;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.55rem;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      margin: 0;
+      box-shadow: 0 0 6px rgba(56, 239, 125, 0.2);
+    }
+
+    .sec-norte { grid-column: 2; grid-row: 1; }
+    .sec-sur { grid-column: 2; grid-row: 3; }
+    .sec-poniente { grid-column: 1; grid-row: 2; }
+    .sec-oriente { grid-column: 3; grid-row: 2; }
+
+    .bloque-horiz { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .bloque-vert { display: flex; flex-direction: row; gap: 2px; align-items: center; }
+    .fila-asientos { display: flex; gap: 1px; }
+    .columna-asientos { display: flex; flex-direction: column; gap: 1px; }
+
+    .asiento {
+      width: 8px;
+      height: 7px;
+      background: #2a69ac;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.22rem;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .asiento.seleccionado { background: #f6e05e !important; color: #000; }
+    .asiento.ocupado { background: #e53e3e !important; cursor: not-allowed; }
+
+    .asiento-comision {
+      width: 8px;
+      height: 32px;
+      background: #805ad5;
+      border-radius: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      writing-mode: vertical-lr;
+      transform: rotate(180deg);
+      font-size: 0.25rem;
+      font-weight: bold;
+      color: #fff;
+      border: 1px solid #9f7aea;
+      cursor: default;
+      user-select: none;
+    }
+
+    .footer-arena {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 4px;
+      grid-column: 1 / -1;
+    }
+    .badge-info { background: #2d3748; padding: 2px 5px; border-radius: 4px; font-size: 0.5rem; font-weight: bold; }
+
+    .leyenda { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; font-size: 0.65rem; }
+    .item-leyenda { display: flex; align-items: center; gap: 4px; }
+    .box-color { width: 9px; height: 9px; border-radius: 2px; }
+
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+    .input-group label { font-size: 0.72rem; color: #a0aec0; }
+    .input-group input, .input-group select {
+      padding: 8px;
+      background: #162032;
+      border: 1px solid #45482d;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      width: 100%;
+    }
+
+    .resumen-box {
+      background: #162032;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      border: 1px solid #2d3748;
+    }
+
+    .btn {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.85rem;
+      touch-action: manipulation;
+      width: 100%;
+    }
+    .btn-primario { background: #38ef7d; color: #000; }
+    .btn-secundario { background: transparent; border: 1px solid #2d3748; color: #a0aec0; }
+    .btn-whatsapp { background: #25D366; color: #fff; }
+    .clabe-container { font-family: monospace; font-size: 0.95rem; text-align: center; color: #38ef7d; font-weight: bold; }
+
+    .leyenda-tiempo {
+      color: #e53e3e;
+      font-size: 0.65rem;
+      text-align: center;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+
+  <!-- VISTA 1: MAPA -->
+  <section id="vistaMapa" class="vista vista-activa">
+    <div class="layout-mapa">
+      <div class="left-panel">
+        <h2>Indy Wrestling</h2>
+        <p class="subtitulo">Selecciona tus asientos numerados o entradas generales (Mín. 1 y Máx. 5 por persona)</p>
+
+        <div class="arena-outer-layout">
+          <div class="grada-banner grada-horiz" style="grid-row: 1;">GRADAS GENERALES (NORTE)</div>
+          <div class="grada-banner grada-vert grada-poniente">GRADAS GENERALES (PONIENTE)</div>
+
+          <div class="arena-container">
+            <div class="bloque-vert sec-poniente" id="sec-poniente"></div>
+            <div class="bloque-horiz sec-norte" id="sec-norte"></div>
+            
+            <div class="ring-box">RING</div>
+            
+            <div class="bloque-horiz sec-sur" id="sec-sur"></div>
+            <div class="bloque-vert sec-oriente" id="sec-oriente"></div>
+
+            <div class="footer-arena">
+              <span class="badge-info">SALIDA LUCHADORES</span>
+              <span class="badge-info">ENTRADA PRINCIPAL</span>
+            </div>
+          </div>
+
+          <div class="grada-banner grada-vert grada-oriente">GRADAS GENERALES (ORIENTE)</div>
+          <div class="grada-banner grada-horiz" style="grid-row: 3;">GRADAS GENERALES (SUR / SALIDA)</div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <h3>Precios y Selección</h3>
+        <div class="leyenda">
+          <div class="item-leyenda"><div class="box-color" style="background:#2a69ac;"></div> F 1-2 ($1,000)</div>
+          <div class="item-leyenda"><div class="box-color" style="background:#2a69ac;"></div> F 3-6 ($800)</div>
+          <div class="item-leyenda"><div class="box-color" style="background:#2ecc71;"></div> Grada ($250)</div>
+          <div class="item-leyenda"><div class="box-color" style="background:#f6e05e;"></div> Seleccionado</div>
+          <div class="item-leyenda"><div class="box-color" style="background:#e53e3e;"></div> Ocupado</div>
+          <div class="item-leyenda"><div class="box-color" style="background:#805ad5;"></div> Comisión</div>
+        </div>
+
+        <div class="input-group">
+          <label for="cantGradas">Entradas Grada General ($250 c/u):</label>
+          <select id="cantGradas" onchange="actualizarTotalUI()">
+            <option value="0">0 Boletos</option>
+            <option value="1">1 Boleto ($250)</option>
+            <option value="2">2 Boletos ($500)</option>
+            <option value="3">3 Boletos ($750)</option>
+            <option value="4">4 Boletos ($1,000)</option>
+            <option value="5">5 Boletos ($1,250)</option>
+          </select>
+        </div>
+
+        <div class="resumen-box">
+          <p>Total Boletos: <strong id="lblCantBoletos">0</strong></p>
+          <p>Total a pagar: <strong id="lblTotalPagar" style="color:#38ef7d;">$0 MXN</strong></p>
+        </div>
+
+        <button class="btn btn-primario" onclick="irAFormulario()">Continuar a Registro</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISTA 2: FORMULARIO DE DATOS -->
+  <section id="vistaRegistro" class="vista">
+    <div class="panel-formulario">
+      <h2 style="text-align: center;">Datos del Comprador</h2>
+      <p class="subtitulo">Ingresa tus datos para recibir la confirmación</p>
+      
+      <div class="input-group">
+        <label for="nombre">Nombre Completo:</label>
+        <input type="text" id="nombre" placeholder="Ej. Juan Pérez">
+      </div>
+
+      <div class="input-group">
+        <label for="telefono">Teléfono (WhatsApp):</label>
+        <input type="tel" id="telefono" placeholder="Ej. 4421222324">
+      </div>
+
+      <div class="input-group">
+        <label for="email">Correo Electrónico:</label>
+        <input type="email" id="email" placeholder="correo@ejemplo.com">
+      </div>
+
+      <button class="btn btn-primario" onclick="irAPago()">Continuar al Método de Pago</button>
+      <button class="btn btn-secundario" onclick="mostrarVista('vistaMapa')">Volver al Mapa</button>
+    </div>
+  </section>
+
+  <!-- VISTA 3: PAGO SPEI -->
+  <section id="vistaPago" class="vista">
+    <div class="panel-formulario">
+      <h2 style="text-align: center; color: #38ef7d;">PAGO CON TRANSFERENCIA SPEI</h2>
+      <p class="subtitulo">El sistema generará una CLABE / Cuenta asignada exclusivamente a tu pedido.</p>
+
+      <div class="resumen-box" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <div>
+          <p style="color: #a0aec0; font-size: 0.8rem;">Total a Pagar:</p>
+          <p style="color: #a0aec0; font-size: 0.8rem; margin-top: 4px;">Comprador:</p>
+        </div>
+        <div style="text-align: right;">
+          <p id="lblMontoPago" style="color: #38ef7d; font-weight: bold; font-size: 0.95rem;">$0 MXN</p>
+          <p id="lblNombreComprador" style="color: #ffffff; font-weight: bold; font-size: 0.85rem; margin-top: 4px;">-</p>
+        </div>
+      </div>
+
+      <button class="btn btn-secundario" onclick="generarCLABE()" id="btnGenerarClabe">🔒 Generar mi CLABE de Pago</button>
+
+      <div id="boxClabeGenerada" style="display:none; border: 1px solid #38ef7d; border-radius: 10px; padding: 10px; background: rgba(56, 239, 125, 0.02);">
+        <h3 style="text-align: center; color: #38ef7d; font-size: 0.85rem; margin-bottom: 2px;">¡CLABE Generada con Éxito!</h3>
+        <p style="text-align: center; color: #a0aec0; font-size: 0.65rem; margin-bottom: 8px;">Transfiere la cantidad exacta desde la aplicación de tu banco:</p>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.78rem;">
+          <span style="color: #a0aec0;">Banco Destino:</span>
+          <span style="color: #ffffff; font-weight: bold;">Banco Azteca</span>
+        </div>
+
+        <p style="text-align: center; color: #a0aec0; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 3px; text-transform: uppercase;">NÚMERO DE TARJETA / CLABE INTERBANCARIA</p>
+        <div class="clabe-container" id="speiClabe" style="margin-bottom: 6px;">5343 8102 1002 8855</div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.78rem;">
+          <span style="color: #a0aec0;">Beneficiario:</span>
+          <span style="color: #ffffff; font-weight: bold;">Ivon Cazares Trejo</span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.78rem;">
+          <span style="color: #a0aec0;">Concepto / Referencia:</span>
+          <span style="color: #f6e05e; font-weight: bold;">BOLETOS-ARENA</span>
+        </div>
+
+        <p class="leyenda-tiempo">● Tienes 10 minutos para realizar la transferencia. La confirmación es automática.</p>
+
+        <button class="btn btn-primario" id="btnConfirmarPago" style="width:100%; margin-top: 8px;" onclick="confirmarYMostrarExito()">YA REALICÉ MI TRANSFERENCIA / VER BOLETOS</button>
+      </div>
+
+      <button class="btn btn-secundario" onclick="mostrarVista('vistaRegistro')">Volver a Datos</button>
+    </div>
+  </section>
+
+  <!-- VISTA 4: ÉXITO -->
+  <section id="vistaExito" class="vista">
+    <div class="panel-formulario">
+      <h2 style="font-size:1.4rem; color:#38ef7d; text-align:center;">✓ ¡Reserva Confirmada!</h2>
+      
+      <div class="resumen-box">
+        <p><strong>Referencia SPEI:</strong> <span id="lblFolioExito" style="color:#38ef7d; font-family:monospace;">-</span></p>
+        <p style="margin-top: 5px;"><strong>Detalle de Accesos y Folios:</strong></p>
+        <p id="lblAsientosExito" style="color:#ffffff; font-size:0.78rem; margin-top:3px; line-height: 1.3;">-</p>
+      </div>
+
+      <button class="btn btn-whatsapp" onclick="enviarWhatsApp()">Enviar Comprobante por WhatsApp</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwQRdXktRMMR2KCLScRVvf1AXpvXfCrhATxM8ZwUlyEO1YTDzpo1Zus6E26z_NHfjbrAw/exec";
+
+  const PRECIO_FILA_1_2 = 1000;
+  const PRECIO_FILA_3_6 = 800;
+  const PRECIO_GRADA = 250;
+  const MIN_BOLETOS = 1;
+  const MAX_BOLETOS = 5;
+  const TOTAL_GRADAS_DISPONIBLES = 1800;
+
+  let numeradosSeleccionados = [];
+  let temporizadorBloqueo = null;
+  let tiempoRestante = 600;
+  let gradasVendidasGlobales = 0;
+
+  function generarRango(inicio, fin) {
+    let arr = [];
+    for (let i = Math.min(inicio, fin); i <= Math.max(inicio, fin); i++) arr.push(String(i));
+    return arr;
+  }
+
+  const ASIENTOS_FILA_1_2 = [
+    ...generarRango(1, 17), ...generarRango(18, 34),
+    ...generarRango(35, 51), ...generarRango(52, 68),
+    ...generarRango(69, 88), ...generarRango(89, 109),
+    ...generarRango(110, 130), ...generarRango(131, 151)
+  ];
+
+  const ASIENTOS_NARANJA_BLOQUEADOS = [
+    ...generarRango(94, 99),
+    ...generarRango(3, 42),
+    ...generarRango(44, 61),
+    ...generarRango(82, 88),
+    ...generarRango(160, 170),
+    ...generarRango(215, 219),
+    ...generarRango(227, 230),
+    ...generarRango(305, 310)
+  ];
+
+  let mapaFilasGlobal = {};
+  let asientosOcupadosGlobalesTotales = [];
+
+  function obtenerPrecioAsiento(num) {
+    return ASIENTOS_FILA_1_2.includes(String(num)) ? PRECIO_FILA_1_2 : PRECIO_FILA_3_6;
+  }
+
+  // VALIDACIÓN LIMPIA: Solo valida continuidad directa al grupo seleccionado por el usuario
+  function validarContinuidad(numStr, idFila) {
+    let asientosFila = mapaFilasGlobal[idFila];
+    let ocupadosEnFilaGlobal = asientosOcupadosGlobalesTotales.map(String);
+    
+    // Si es el primer asiento que selecciona el usuario, se permite siempre sin restricciones
+    if (numeradosSeleccionados.length === 0) {
+      return { permitido: true };
+    }
+
+    let idxAsiento = asientosFila.indexOf(numStr);
+    if (idxAsiento === -1) return { permitido: false, mensaje: "Asiento inválido." };
+
+    // El nuevo asiento debe estar conectado directamente a otro asiento que el usuario ya tenga seleccionado en esta misma compra
+    let vecinoIzquierda = idxAsiento > 0 ? asientosFila[idxAsiento - 1] : null;
+    let vecinoDerecha = idxAsiento < asientosFila.length - 1 ? asientosFila[idxAsiento + 1] : null;
+
+    let conectadoDirecto = (vecinoIzquierda && numeradosSeleccionados.includes(vecinoIzquierda)) ||
+                           (vecinoDerecha && numeradosSeleccionados.includes(vecinoDerecha));
+
+    if (!conectadoDirecto) {
+      return { permitido: false, mensaje: "Debes seleccionar asientos continuos al grupo que estás eligiendo." };
+    }
+
+    return { permitido: true };
+  }
+
+  function crearElemAsiento(num, idFila) {
+    const div = document.createElement('div');
+    div.className = 'asiento';
+    div.innerText = num;
+    div.setAttribute('data-num', num);
+    div.setAttribute('data-fila', idFila);
+
+    div.addEventListener('click', () => {
+      if (div.classList.contains('ocupado')) return;
+
+      const numStr = String(num);
+
+      if (numeradosSeleccionados.includes(numStr)) {
+        numeradosSeleccionados = numeradosSeleccionados.filter(item => item !== numStr);
+        div.classList.remove('seleccionado');
+      } else {
+        const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
+        if ((numeradosSeleccionados.length + cantGradas) >= MAX_BOLETOS) {
+          alert(`El límite máximo por compra es de ${MAX_BOLETOS} boletos.`);
+          return;
+        }
+
+        let validacion = validarContinuidad(numStr, idFila);
+        if (!validacion.permitido) {
+          alert(validacion.mensaje);
+          return;
+        }
+
+        numeradosSeleccionados.push(numStr);
+        div.classList.add('seleccionado');
+      }
+      actualizarTotalUI();
+    });
+
+    return div;
+  }
+
+  function renderizarHorizontal(idContenedor, filasArray) {
+    const contenedor = document.getElementById(idContenedor);
+    contenedor.innerHTML = '';
+
+    filasArray.forEach(([inicio, fin], idxFila) => {
+      const filaDiv = document.createElement('div');
+      filaDiv.className = 'fila-asientos';
+
+      const paso = inicio <= fin ? 1 : -1;
+      const total = Math.abs(fin - inicio) + 1;
+      let idFilaKey = `${idContenedor}_h_${idxFila}`;
+      mapaFilasGlobal[idFilaKey] = [];
+
+      for (let i = 0; i < total; i++) {
+        const num = inicio + (i * paso);
+        mapaFilasGlobal[idFilaKey].push(String(num));
+        filaDiv.appendChild(crearElemAsiento(num, idFilaKey));
+      }
+      contenedor.appendChild(filaDiv);
+    });
+  }
+
+  function renderizarVertical(idContenedor, columnasArray, incluirComisionFinal = false) {
+    const contenedor = document.getElementById(idContenedor);
+    contenedor.innerHTML = '';
+
+    columnasArray.forEach(([inicio, fin], idx) => {
+      const colDiv = document.createElement('div');
+      colDiv.className = 'columna-asientos';
+
+      const paso = inicio <= fin ? 1 : -1;
+      const total = Math.abs(fin - inicio) + 1;
+      let idFilaKey = `${idContenedor}_v_${idx}`;
+      mapaFilasGlobal[idFilaKey] = [];
+
+      for (let i = 0; i < total; i++) {
+        const num = inicio + (i * paso);
+        mapaFilasGlobal[idFilaKey].push(String(num));
+        colDiv.appendChild(crearElemAsiento(num, idFilaKey));
+      }
+
+      if (incluirComisionFinal && idx === 0) {
+        const comisionDiv = document.createElement('div');
+        comisionDiv.className = 'asiento-comision';
+        comisionDiv.innerText = 'COM';
+        comisionDiv.title = 'Comisión';
+        colDiv.appendChild(comisionDiv);
+      }
+
+      contenedor.appendChild(colDiv);
+    });
+  }
+
+  function inicializarMapa() {
+    renderizarHorizontal('sec-norte', [
+      [542, 506], [409, 380], [296, 270], [196, 174], [109, 89], [34, 18]
+    ]);
+
+    renderizarHorizontal('sec-sur', [
+      [52, 68], [131, 151], [220, 243], [324, 351], [440, 469], [572, 607]
+    ]);
+
+    renderizarVertical('sec-poniente', [
+      [543, 570], [410, 439], [297, 323], [197, 219], [110, 130], [35, 51]
+    ], true);
+
+    renderizarVertical('sec-oriente', [
+      [17, 1], [88, 69], [173, 152], [269, 244], [379, 352], [505, 470]
+    ]);
+  }
+
+  function marcarAsientosOcupados(asientosOcupados) {
+    asientosOcupados.forEach(num => {
+      const elem = document.querySelector(`.asiento[data-num="${num}"]`);
+      if (elem) {
+        elem.classList.add('ocupado');
+      }
+    });
+  }
+
+  async function cargarAsientosOcupadosDesdeSheets() {
+    marcarAsientosOcupados(ASIENTOS_NARANJA_BLOQUEADOS);
+    asientosOcupadosGlobalesTotales = [...ASIENTOS_NARANJA_BLOQUEADOS];
+
+    const asientosCache = localStorage.getItem('asientos_ocupados_cache');
+    if (asientosCache) {
+      try {
+        const ocupadosLocal = JSON.parse(asientosCache);
+        marcarAsientosOcupados(ocupadosLocal);
+        asientosOcupadosGlobalesTotales = [...new Set([...asientosOcupadosGlobalesTotales, ...ocupadosLocal])];
+      } catch (e) {
+        console.warn("Error con la caché local:", e);
+      }
+    }
+
+    try {
+      const urlConCacheBuster = `${URL_GOOGLE_SHEETS}?_t=${Date.now()}`;
+      const resp = await fetch(urlConCacheBuster);
+      const data = await resp.json();
+
+      if (data && data.ocupados) {
+        const todosOcupados = [...new Set([...ASIENTOS_NARANJA_BLOQUEADOS, ...data.ocupados])];
+        marcarAsientosOcupados(todosOcupados);
+        asientosOcupadosGlobalesTotales = todosOcupados;
+        localStorage.setItem('asientos_ocupados_cache', JSON.stringify(todosOcupados));
+      }
+
+      if (data && typeof data.gradasVendidas === 'number') {
+        gradasVendidasGlobales = data.gradasVendidas;
+      } else if (data && data.gradasCount) {
+        gradasVendidasGlobales = parseInt(data.gradasCount) || 0;
+      }
+
+      verificarSoldOutGradas();
+    } catch (e) {
+      console.log("Consulta completada localmente.");
+    }
+  }
+
+  function verificarSoldOutGradas() {
+    const restantes = Math.max(0, TOTAL_GRADAS_DISPONIBLES - gradasVendidasGlobales);
+
+    if (restantes <= 0) {
+      const selectGradas = document.getElementById('cantGradas');
+      selectGradas.value = "0";
+      selectGradas.disabled = true;
+      selectGradas.style.background = "#2a1a1a";
+      selectGradas.style.borderColor = "#e53e3e";
+      
+      document.querySelectorAll('.grada-banner').forEach(banner => {
+        banner.innerHTML = "🚨 ¡SOLD OUT! - GRADAS AGOTADAS";
+        banner.style.background = "#581515";
+        banner.style.borderColor = "#e53e3e";
+        banner.style.color = "#ff8080";
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    inicializarMapa();
+    await cargarAsientosOcupadosDesdeSheets();
+  });
+
+  function mostrarVista(idVista) {
+    document.querySelectorAll('.vista').forEach(v => v.classList.remove('vista-activa'));
+    document.getElementById(idVista).classList.add('vista-activa');
+    window.scrollTo(0, 0);
+  }
+
+  function calcularTotal() {
+    const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
+    let totalNumerados = numeradosSeleccionados.reduce((sum, num) => sum + obtenerPrecioAsiento(num), 0);
+    return totalNumerados + (cantGradas * PRECIO_GRADA);
+  }
+
+  function actualizarTotalUI() {
+    const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
+    const totalBoletos = numeradosSeleccionados.length + cantGradas;
+    document.getElementById('lblCantBoletos').innerText = totalBoletos;
+    document.getElementById('lblTotalPagar').innerText = `$${calcularTotal()} MXN`;
+  }
+
+  function iniciarTimerBloqueo() {
+    clearInterval(temporizadorBloqueo);
+    tiempoRestante = 600;
+
+    let labelTimer = document.getElementById('lblTimerExpiracion');
+    if (!labelTimer) {
+      labelTimer = document.createElement('div');
+      labelTimer.id = 'lblTimerExpiracion';
+      labelTimer.style.cssText = "color: #f6e05e; font-weight: bold; text-align: center; margin-top: 6px; font-size: 0.8rem;";
+      document.querySelector('.right-panel').appendChild(labelTimer);
+    }
+
+    temporizadorBloqueo = setInterval(() => {
+      let minutos = Math.floor(tiempoRestante / 60);
+      let segundos = tiempoRestante % 60;
+      labelTimer.innerText = `⏱️ Asientos apartados por: ${minutos}:${segundos < 10 ? '0' : ''}${segundos}`;
+
+      if (tiempoRestante <= 0) {
+        clearInterval(temporizadorBloqueo);
+        alert("El tiempo de apartado de 10 minutos ha expirado. Tus asientos fueron liberados.");
+        location.reload();
+      }
+      tiempoRestante--;
+    }, 1000);
+  }
+
+  async function guardarEnGoogleSheets(payload) {
+    try {
+      await fetch(URL_GOOGLE_SHEETS, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.error("Error enviando datos:", e);
+    }
+  }
+
+  async function irAFormulario() {
+    const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
+    const totalBoletos = numeradosSeleccionados.length + cantGradas;
+
+    if (totalBoletos < MIN_BOLETOS) {
+      alert(`Debes seleccionar un mínimo de ${MIN_BOLETOS} boleto.`);
+      return;
+    }
+    if (totalBoletos > MAX_BOLETOS) {
+      alert(`El límite máximo por compra es de ${MAX_BOLETOS} boletos.`);
+      return;
+    }
+
+    const btn = event.target;
+    btn.innerText = "Verificando...";
+    btn.disabled = true;
+
+    try {
+      const resp = await fetch(`${URL_GOOGLE_SHEETS}?_t=${Date.now()}`);
+      const data = await resp.json();
+      
+      let colision = false;
+      const ocupadosTotales = data && data.ocupados ? [...ASIENTOS_NARANJA_BLOQUEADOS, ...data.ocupados] : ASIENTOS_NARANJA_BLOQUEADOS;
+      colision = numeradosSeleccionados.some(num => ocupadosTotales.includes(num));
+
+      if (colision) {
+        alert("¡Lo siento! Uno o más asientos que seleccionaste ya fueron apartados. La página se recargará.");
+        location.reload();
+        return; 
+      }
+
+      let listaDetalles = [];
+      numeradosSeleccionados.forEach(num => listaDetalles.push(`Asiento #${num}`));
+
+      if (cantGradas > 0) {
+        listaDetalles.push(`Grada General x${cantGradas}`);
+      }
+
+      await guardarEnGoogleSheets({
+        fecha: new Date().toLocaleString(),
+        estado: "BLOQUEADO",
+        boletos: listaDetalles.join(' | '),
+        cantidadGradas: cantGradas
+      });
+
+      iniciarTimerBloqueo();
+      mostrarVista('vistaRegistro');
+      
+    } catch(e) {
+      mostrarVista('vistaRegistro');
+      iniciarTimerBloqueo();
+    }
+  }
+
+  function irAPago() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+
+    if (!nombre || !telefono) {
+      alert("Ingresa tu nombre y WhatsApp para continuar.");
+      return;
+    }
+
+    document.getElementById('lblMontoPago').innerText = `$${calcularTotal()} MXN`;
+    document.getElementById('lblNombreComprador').innerText = nombre;
+    mostrarVista('vistaPago');
+  }
+
+  function generarCLABE() {
+    document.getElementById('boxClabeGenerada').style.display = 'block';
+    document.getElementById('btnGenerarClabe').style.display = 'none';
+  }
+
+  function confirmarYMostrarExito() {
+    const tarjeta = document.getElementById('speiClabe').innerText;
+    const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
+
+    let listaDetalles = [];
+    numeradosSeleccionados.sort((a, b) => parseInt(a) - parseInt(b));
+
+    numeradosSeleccionados.forEach(num => {
+      const precio = obtenerPrecioAsiento(num);
+      const folioNumerado = String(num).padStart(3, '0');
+      listaDetalles.push(`Asiento #${num} (Folio: ${folioNumerado}) - $${precio}`);
+    });
+
+    for (let i = 1; i <= cantGradas; i++) {
+      const folioGrada = String(i).padStart(4, '0');
+      listaDetalles.push(`Grada General (Folio: ${folioGrada}) - $${PRECIO_GRADA}`);
+    }
+
+    document.getElementById('lblFolioExito').innerText = tarjeta;
+    document.getElementById('lblAsientosExito').innerHTML = listaDetalles.join('<br>');
+
+    const payloadFinal = {
+      fecha: new Date().toLocaleString(),
+      nombre: document.getElementById('nombre').value.trim(),
+      telefono: document.getElementById('telefono').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      estado: "PAGADO",
+      monto: `$${calcularTotal()} MXN`,
+      referencia: tarjeta,
+      boletos: listaDetalles.join(' | '),
+      cantidadGradas: cantGradas
+    };
+
+    mostrarVista('vistaExito');
+    guardarEnGoogleSheets(payloadFinal);
+  }
+
+  function enviarWhatsApp() {
+    const tarjeta = document.getElementById('lblFolioExito').innerText;
+    const asientos = document.getElementById('lblAsientosExito').innerText.replace(/\n/g, ' | ');
+    const nombre = document.getElementById('nombre').value.trim();
+    
+    const mensaje = `Hola, soy ${nombre}. Ya realicé mi transferencia SPEI.\nReferencia: ${tarjeta}\nDetalle: ${asientos}`;
+    window.open(`https://api.whatsapp.com/send?phone=524424701700&text=${encodeURIComponent(mensaje)}`, '_blank');
+  }
+</script>
+
+</body>
+</html>
