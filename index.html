@@ -616,7 +616,7 @@
   function obtenerPrecioAsiento(num) {
     return ASIENTOS_FILA_1_2.includes(String(num)) ? PRECIO_FILA_1_2 : PRECIO_FILA_3_6;
   }
-  function validarSeleccionAsiento(numStr, idFila) {
+ function validarSeleccionAsiento(numStr, idFila) {
   let asientosFila = mapaFilasGlobal[idFila];
   let idxAsiento = asientosFila.indexOf(numStr);
   
@@ -624,9 +624,20 @@
     return { permitido: false, mensaje: "Asiento inválido." };
   }
 
-  // Se eliminó la validación de asientos sueltos para permitir selección libre
-  return { permitido: true };
+  let estaSeleccionado = numeradosSeleccionados.includes(numStr);
+  let simulacion = [...numeradosSeleccionados];
+
+  if (estaSeleccionado) {
+    // Si ya estaba seleccionado, lo quitamos de la lista
+    simulacion = simulacion.filter(a => a !== numStr);
+  } else {
+    // Si no estaba seleccionado, lo agregamos
+    simulacion.push(numStr);
   }
+
+  // Retorna permitido y la simulación actualizada de los asientos seleccionados
+  return { permitido: true, seleccionados: simulacion };
+}
 
   function crearElemAsiento(num, idFila, claseExtra = '') {
     const div = document.createElement('div');
