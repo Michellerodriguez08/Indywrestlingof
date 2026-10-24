@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <title>Indy Wrestling - Planimetría Arena QRO</title>
+  <title>Indy Wrestling</title>
   <style>
     * { 
       box-sizing: border-box; 
@@ -527,11 +527,11 @@
         </div>
 
         <p style="text-align: center; color: #a0aec0; font-size: 0.6rem; letter-spacing: 1px; margin-bottom: 3px; text-transform: uppercase;">NÚMERO DE TARJETA / CLABE INTERBANCARIA</p>
-        <div class="clabe-container" id="speiClabe" style="margin-bottom: 6px;">5343 8102 1221 3364</div>
+        <div class="clabe-container" id="speiClabe" style="margin-bottom: 6px;">5343 8102 1002 8855</div>
 
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.78rem;">
           <span style="color: #a0aec0;">Beneficiario:</span>
-          <span style="color: #ffffff; font-weight: bold;">Eduardo Cazares</span>
+          <span style="color: #ffffff; font-weight: bold;">Ivon Cazares Trejo</span>
         </div>
 
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.78rem;">
@@ -567,7 +567,7 @@
 </div>
 
 <script>
-  const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbxzi-lVhqVU_K79_oKtJZFmGql_NOhakAVX3esT_SV8ozcegrqcRt0DjxaLPJOrcq78VQ/exec";
+  const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzzQbAC8rEIrUhHzFIlAuHrsnGkczX4aPUv4KzhtRQCf27qfN6upHlAFx6ZJsfVMnzF/exec";
 
   const PRECIO_FILA_1_2 = 1200;
   const PRECIO_FILA_3_6 = 800;
@@ -599,18 +599,10 @@
   ];
 
   const ASIENTOS_NARANJA_BLOQUEADOS = [
-    ...generarRango(21, 34),
+    ...generarRango(27, 34),
     ...generarRango(3, 18),
     ...generarRango(39, 52),
-    ...generarRango(56, 59),
-    ...generarRango(62, 63),
-    ...generarRango(97, 99),
-    ...generarRango(157, 168),
-    ...generarRango(189, 189),
-    ...generarRango(209, 212),
-    ...generarRango(220, 223),
-    ...generarRango(396, 400),
-    ...generarRango(470, 483),
+    ...generarRango(56, 63)
   ];
 
   let mapaFilasGlobal = {};
@@ -618,28 +610,90 @@
   function obtenerPrecioAsiento(num) {
     return ASIENTOS_FILA_1_2.includes(String(num)) ? PRECIO_FILA_1_2 : PRECIO_FILA_3_6;
   }
- function validarSeleccionAsiento(numStr, idFila) {
-  let asientosFila = mapaFilasGlobal[idFila];
-  let idxAsiento = asientosFila.indexOf(numStr);
-  
-  if (idxAsiento === -1) {
-    return { permitido: false, mensaje: "Asiento inválido." };
+
+  function validarSeleccionAsiento(numStr, idFila) {
+    let asientosFila = mapaFilasGlobal[idFila];
+    let idxAsiento = asientosFila.indexOf(numStr);
+    if (idxAsiento === -1) return { permitido: false, mensaje: "Asiento inválido." };
+
+    let estaSeleccionado = numeradosSeleccionados.includes(numStr);
+
+    let simulacion = [...numeradosSeleccionados];
+    if (estaSeleccionado) {
+      simulacion = simulacion.filter(a => a !== numStr);
+    } else {
+      if (simulacion.length === 0) {
+        return { permitido: true };
+      }
+      simulacion.push(numStr);
+    }
+
+    if (!estaSeleccionado && simulacion.length > 1) {
+      let vecinoIzquierda = idxAsiento > 0 ? asientosFila[idxAsiento - 1] : null;
+      let vecinoDerecha = idxAsiento < asientosFila.length - 1 ? asientosFila[idxAsiento + 1] : null;
+      let conectadoDirecto = (vecinoIzquierda && numeradosSeleccionados.includes(vecinoIzquierda)) ||
+                             (vecinoDerecha && numeradosSeleccionados.includes(vecinoDerecha));
+      if (!conectadoDirecto) {
+        return { permitido: false, mensaje: "Debes seleccionar asientos continuos al grupo que estás eligiendo." };
+      }
+    }
+
+    // Bloquea únicamente si ESTA selección crea un asiento aislado.
+    // Así no aparece una alerta por asientos aislados que ya existían antes.
+    function asientoQuedariaAislado(asientosSeleccionados, i) {
+      const asientoActual = String(asientosFila[i]);
+      const elemActual = document.querySelector(`.asiento[data-num="${asientoActual}"]`);
+
+      // Un asiento inexistente o ya ocupado/bloqueado no es un asiento disponible.
+      if (!elemActual || elemActual.classList.contains('ocupado') ||
+          asientosSeleccionados.includes(asientoActual)) {
+        return false;
+      }
+
+      const numActual = Number(asientoActual);
+      const asientoIzq = i > 0 ? String(asientosFila[i - 1]) : null;
+      const asientoDer = i < asientosFila.length - 1 ? String(asientosFila[i + 1]) : null;
+
+      // Solo cuentan vecinos físicos con numeración consecutiva.
+      const izqConsecutivo = asientoIzq !== null &&
+        Math.abs(numActual - Number(asientoIzq)) === 1;
+      const derConsecutivo = asientoDer !== null &&
+        Math.abs(numActual - Number(asientoDer)) === 1;
+
+      const elemIzq = izqConsecutivo
+        ? document.querySelector(`.asiento[data-num="${asientoIzq}"]`) : null;
+      const elemDer = derConsecutivo
+        ? document.querySelector(`.asiento[data-num="${asientoDer}"]`) : null;
+
+      const izqNoDisponible = izqConsecutivo &&
+        (!elemIzq || elemIzq.classList.contains('ocupado') ||
+         asientosSeleccionados.includes(asientoIzq));
+      const derNoDisponible = derConsecutivo &&
+        (!elemDer || elemDer.classList.contains('ocupado') ||
+         asientosSeleccionados.includes(asientoDer));
+
+      return izqNoDisponible && derNoDisponible;
+    }
+
+    // Compara el estado anterior con el posterior: solo bloquea si se crea
+    // un nuevo asiento aislado por la selección que se está intentando hacer.
+    if (!estaSeleccionado && simulacion.length > numeradosSeleccionados.length) {
+      for (let i = 0; i < asientosFila.length; i++) {
+        const aisladoAntes = asientoQuedariaAislado(numeradosSeleccionados, i);
+        const aisladoDespues = asientoQuedariaAislado(simulacion, i);
+
+        if (!aisladoAntes && aisladoDespues) {
+          const asientoAislado = String(asientosFila[i]);
+          return {
+            permitido: false,
+            mensaje: `No puedes dejar un asiento vacío entre números consecutivos. Por favor, selecciona primero el asiento #${asientoAislado}.`
+          };
+        }
+      }
+    }
+
+    return { permitido: true };
   }
-
-  let estaSeleccionado = numeradosSeleccionados.includes(numStr);
-  let simulacion = [...numeradosSeleccionados];
-
-  if (estaSeleccionado) {
-    // Si ya estaba seleccionado, lo quitamos de la lista
-    simulacion = simulacion.filter(a => a !== numStr);
-  } else {
-    // Si no estaba seleccionado, lo agregamos
-    simulacion.push(numStr);
-  }
-
-  // Retorna permitido y la simulación actualizada de los asientos seleccionados
-  return { permitido: true, seleccionados: simulacion };
-}
 
   function crearElemAsiento(num, idFila, claseExtra = '') {
     const div = document.createElement('div');
