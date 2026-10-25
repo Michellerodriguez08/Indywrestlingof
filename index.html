@@ -23,7 +23,6 @@
       padding: 10px;
     }
 
-   
     .main-wrapper {
       width: 100%;
       max-width: 1350px;
@@ -65,7 +64,21 @@
       .left-panel { flex: 1.5; max-width: none; padding: 16px; }
     }
 
-    .left-panel h2 { text-align: center; margin-bottom: 2px; font-size: 1.1rem; }
+    .left-panel h2 { text-align: center; margin-bottom: 2px; font-size: 1.1rem; cursor: pointer; user-select: none; }
+
+    .aviso-banner {
+      background: rgba(246, 224, 94, 0.15);
+      border: 1px solid #f6e05e;
+      color: #f6e05e;
+      font-size: 0.75rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      text-align: center;
+      margin: 6px 0;
+      width: 100%;
+      font-weight: bold;
+      letter-spacing: 0.3px;
+    }
 
     .right-panel {
       width: 100%;
@@ -186,7 +199,6 @@
     
     .fila-asientos { display: flex; gap: 0.8px; align-items: center; justify-content: center; flex-wrap: nowrap; width: 100%; }
     
-    /* --- CORRECCIÓN DE PASILLOS RECTOS Y SIMÉTRICOS --- */
     .fila-asientos-dividida {
       display: flex;
       justify-content: center;
@@ -209,7 +221,7 @@
       flex: 1;
     }
     .pasillo-central-separador {
-      width: 12px; /* Espacio exacto y recto para el pasillo central */
+      width: 12px;
       flex-shrink: 0;
     }
 
@@ -270,20 +282,6 @@
     }
     #sec-norte > .fila-con-esquinas + .fila-asientos {
       margin-top: 0 !important;
-    }
-
-    .etiqueta-pasillo {
-      background: #e53e3e;
-      color: #ffffff;
-      font-size: 0.35rem;
-      font-weight: bold;
-      padding: 1px 2px;
-      border-radius: 2px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .asiento {
@@ -404,7 +402,7 @@
     @media (max-width: 991px) {
       #sec-norte .esquina-derecha { right: 28px !important; }
     }
-</style>
+  </style>
 </head>
 <body>
 
@@ -414,7 +412,13 @@
   <section id="vistaMapa" class="vista vista-activa">
     <div class="layout-mapa">
       <div class="left-panel">
-        <h2>Indy Wrestling</h2>
+        <h2 onclick="activarModoCreador()" title="Haz clic 3 veces para activar Modo Creador">Indy Wrestling</h2>
+        
+        <!-- BANNER DE AVISO PERMANENTE -->
+        <div class="aviso-banner">
+          ⚠️ POR FAVOR SELECCIONA ASIENTOS JUNTOS NO DEJEN ASIENTOS SOLOS
+        </div>
+
         <p class="subtitulo">Selecciona tus asientos (Mín. 2 y Máx. 5 por compra)</p>
 
         <!-- CONTENEDOR DE GRADAS -->
@@ -567,7 +571,7 @@
 </div>
 
 <script>
-  const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzzQbAC8rEIrUhHzFIlAuHrsnGkczX4aPUv4KzhtRQCf27qfN6upHlAFx6ZJsfVMnzF/exec";
+  const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbwAMpudkyVlcJXXSy2OKTLuvlYMYHbDPQzlirjHneAChe6yg0JVasbA5DS5jqobcHMf/exec";
 
   const PRECIO_FILA_1_2 = 1200;
   const PRECIO_FILA_3_6 = 800;
@@ -580,6 +584,24 @@
   let temporizadorBloqueo = null;
   let tiempoRestante = 600;
   let gradasVendidasGlobales = 0;
+
+  // Variables para el Modo Creador
+  let modoCreador = false;
+  let clicsTitulo = 0;
+
+  function activarModoCreador() {
+    clicsTitulo++;
+    if (clicsTitulo >= 3) {
+      clicsTitulo = 0;
+      let password = prompt("🔒 Ingresa la contraseña de Creadora:");
+      if (password === "1234") {
+        modoCreador = !modoCreador;
+        alert(modoCreador ? "✨ ¡MODO CREADOR ACTIVADO! Restricciones desactivadas." : "🔒 Modo Creador desactivado.");
+        document.querySelector('.left-panel h2').style.color = modoCreador ? "#38ef7d" : "#ffffff";
+      }
+    }
+    setTimeout(() => { clicsTitulo = 0; }, 2000);
+  }
 
   function generarRango(inicio, fin) {
     let arr = [];
@@ -599,10 +621,16 @@
   ];
 
   const ASIENTOS_NARANJA_BLOQUEADOS = [
-    ...generarRango(27, 34),
-    ...generarRango(3, 18),
-    ...generarRango(39, 52),
-    ...generarRango(56, 63)
+    ...generarRango(1, 18),
+    ...generarRango(21, 31),
+    ...generarRango(39, 49),
+    ...generarRango(56, 61),
+    ...generarRango(97, 99),
+    ...generarRango(160, 165),
+    ...generarRango(209, 212),
+    ...generarRango(270, 283),
+    ...generarRango(322, 323)
+
   ];
 
   let mapaFilasGlobal = {};
@@ -612,10 +640,9 @@
   }
 
   function validarSeleccionAsiento(numStr, idFila) {
-    let asientosFila = mapaFilasGlobal[idFila];
-    let idxAsiento = asientosFila.indexOf(numStr);
-    if (idxAsiento === -1) return { permitido: false, mensaje: "Asiento inválido." };
+    if (modoCreador) return { permitido: true };
 
+    let numActual = parseInt(numStr);
     let estaSeleccionado = numeradosSeleccionados.includes(numStr);
 
     let simulacion = [...numeradosSeleccionados];
@@ -628,67 +655,30 @@
       simulacion.push(numStr);
     }
 
+    // 1. Validar que los asientos elegidos formen un grupo continuo
     if (!estaSeleccionado && simulacion.length > 1) {
-      let vecinoIzquierda = idxAsiento > 0 ? asientosFila[idxAsiento - 1] : null;
-      let vecinoDerecha = idxAsiento < asientosFila.length - 1 ? asientosFila[idxAsiento + 1] : null;
-      let conectadoDirecto = (vecinoIzquierda && numeradosSeleccionados.includes(vecinoIzquierda)) ||
-                             (vecinoDerecha && numeradosSeleccionados.includes(vecinoDerecha));
-      if (!conectadoDirecto) {
-        return { permitido: false, mensaje: "Debes seleccionar asientos continuos al grupo que estás eligiendo." };
+      let tieneVecinoNumerico = numeradosSeleccionados.some(sel => {
+        let nSel = parseInt(sel);
+        return Math.abs(nSel - numActual) === 1;
+      });
+
+      if (!tieneVecinoNumerico) {
+        return { permitido: false, mensaje: "POR FAVOR SELECCIONA ASIENTOS JUNTOS NO DEJEN ASIENTOS SOLOS" };
       }
     }
 
-    // Bloquea únicamente si ESTA selección crea un asiento aislado.
-    // Así no aparece una alerta por asientos aislados que ya existían antes.
-    function asientoQuedariaAislado(asientosSeleccionados, i) {
-      const asientoActual = String(asientosFila[i]);
-      const elemActual = document.querySelector(`.asiento[data-num="${asientoActual}"]`);
-
-      // Un asiento inexistente o ya ocupado/bloqueado no es un asiento disponible.
-      if (!elemActual || elemActual.classList.contains('ocupado') ||
-          asientosSeleccionados.includes(asientoActual)) {
-        return false;
-      }
-
-      const numActual = Number(asientoActual);
-      const asientoIzq = i > 0 ? String(asientosFila[i - 1]) : null;
-      const asientoDer = i < asientosFila.length - 1 ? String(asientosFila[i + 1]) : null;
-
-      // Solo cuentan vecinos físicos con numeración consecutiva.
-      const izqConsecutivo = asientoIzq !== null &&
-        Math.abs(numActual - Number(asientoIzq)) === 1;
-      const derConsecutivo = asientoDer !== null &&
-        Math.abs(numActual - Number(asientoDer)) === 1;
-
-      const elemIzq = izqConsecutivo
-        ? document.querySelector(`.asiento[data-num="${asientoIzq}"]`) : null;
-      const elemDer = derConsecutivo
-        ? document.querySelector(`.asiento[data-num="${asientoDer}"]`) : null;
-
-      const izqNoDisponible = izqConsecutivo &&
-        (!elemIzq || elemIzq.classList.contains('ocupado') ||
-         asientosSeleccionados.includes(asientoIzq));
-      const derNoDisponible = derConsecutivo &&
-        (!elemDer || elemDer.classList.contains('ocupado') ||
-         asientosSeleccionados.includes(asientoDer));
-
-      return izqNoDisponible && derNoDisponible;
-    }
-
-    // Compara el estado anterior con el posterior: solo bloquea si se crea
-    // un nuevo asiento aislado por la selección que se está intentando hacer.
-    if (!estaSeleccionado && simulacion.length > numeradosSeleccionados.length) {
-      for (let i = 0; i < asientosFila.length; i++) {
-        const aisladoAntes = asientoQuedariaAislado(numeradosSeleccionados, i);
-        const aisladoDespues = asientoQuedariaAislado(simulacion, i);
-
-        if (!aisladoAntes && aisladoDespues) {
-          const asientoAislado = String(asientosFila[i]);
-          return {
-            permitido: false,
-            mensaje: `No puedes dejar un asiento vacío entre números consecutivos. Por favor, selecciona primero el asiento #${asientoAislado}.`
-          };
-        }
+    // 2. Validar que dentro de tu propia selección no dejes huecos vacíos
+    let simulacionNums = simulacion.map(n => parseInt(n)).sort((a, b) => a - b);
+    
+    for (let i = 0; i < simulacionNums.length - 1; i++) {
+      let actual = simulacionNums[i];
+      let siguiente = simulacionNums[i + 1];
+      
+      if (siguiente - actual === 2) {
+        return { 
+          permitido: false, 
+          mensaje: "POR FAVOR SELECCIONA ASIENTOS JUNTOS NO DEJEN ASIENTOS SOLOS" 
+        };
       }
     }
 
@@ -723,10 +713,12 @@
         numeradosSeleccionados = numeradosSeleccionados.filter(item => item !== numStr);
         div.classList.remove('seleccionado');
       } else {
-        const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
-        if ((numeradosSeleccionados.length + cantGradas) >= MAX_BOLETOS) {
-          alert(`El límite máximo por compra es de ${MAX_BOLETOS} boletos.`);
-          return;
+        if (!modoCreador) {
+          const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
+          if ((numeradosSeleccionados.length + cantGradas) >= MAX_BOLETOS) {
+            alert(`El límite máximo por compra es de ${MAX_BOLETOS} boletos.`);
+            return;
+          }
         }
 
         numeradosSeleccionados.push(numStr);
@@ -790,6 +782,7 @@
 
   function renderizarSeccionHorizontal(idContenedor, filasConfig) {
     const contenedor = document.getElementById(idContenedor);
+    if (!contenedor) return;
     contenedor.innerHTML = '';
 
     filasConfig.forEach((cfg, idxFila) => {
@@ -900,6 +893,7 @@
 
   function renderizarSeccionVertical(idContenedor, colsConfig) {
     const contenedor = document.getElementById(idContenedor);
+    if (!contenedor) return;
     contenedor.innerHTML = '';
 
     colsConfig.forEach((cfg, idxCol) => {
@@ -974,6 +968,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
+    // 🔔 ALERTA AUTOMÁTICA AL ABRIR EL LINK
+    alert("POR FAVOR SELECCIONA ASIENTOS JUNTOS NO DEJEN ASIENTOS SOLOS");
+
     inicializarMapa();
     await cargarAsientosOcupadosDesdeSheets();
   });
@@ -1033,11 +1030,12 @@
       });
     } catch (e) {}
   }
-async function irAFormulario() {
+
+  async function irAFormulario() {
     const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
     const totalBoletos = numeradosSeleccionados.length + cantGradas;
 
-    if (totalBoletos < MIN_BOLETOS || totalBoletos > MAX_BOLETOS) {
+    if (!modoCreador && (totalBoletos < MIN_BOLETOS || totalBoletos > MAX_BOLETOS)) {
       alert(`Debes seleccionar entre ${MIN_BOLETOS} y ${MAX_BOLETOS} boletos en total.`);
       return;
     }
@@ -1048,7 +1046,6 @@ async function irAFormulario() {
     btn.disabled = true;
 
     try {
-      // Consulta en tiempo real a Google Sheets para evitar colisiones
       const resp = await fetch(`${URL_GOOGLE_SHEETS}?_t=${Date.now()}`);
       const data = await resp.json();
       
@@ -1077,7 +1074,6 @@ async function irAFormulario() {
       mostrarVista('vistaRegistro');
       
     } catch(e) {
-      // Si falla la red, permite avanzar de todas formas con el temporizador local
       mostrarVista('vistaRegistro');
       iniciarTimerBloqueo();
     } finally {
@@ -1085,6 +1081,7 @@ async function irAFormulario() {
       btn.disabled = false;
     }
   }
+
   function irAPago() {
     const nombre = document.getElementById('nombre').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
@@ -1104,7 +1101,7 @@ async function irAFormulario() {
     document.getElementById('btnGenerarClabe').style.display = 'none';
   }
 
- function confirmarYMostrarExito() {
+  function confirmarYMostrarExito() {
     const tarjeta = document.getElementById('speiClabe').innerText;
     const cantGradas = parseInt(document.getElementById('cantGradas').value) || 0;
 
@@ -1113,12 +1110,12 @@ async function irAFormulario() {
 
     numeradosSeleccionados.forEach(num => {
       const precio = obtenerPrecioAsiento(num);
-      const folioNumerado = String(num).padStart(3, '0'); // Formato de folio con ceros
+      const folioNumerado = String(num).padStart(3, '0');
       listaDetalles.push(`Asiento #${num} (Folio: ${folioNumerado}) - $${precio}`);
     });
 
     for (let i = 1; i <= cantGradas; i++) {
-      const folioGrada = String(i).padStart(4, '0'); // Formato de folio para gradas
+      const folioGrada = String(i).padStart(4, '0');
       listaDetalles.push(`Grada General (Folio: ${folioGrada}) - $${PRECIO_GRADA}`);
     }
 
@@ -1140,6 +1137,7 @@ async function irAFormulario() {
     mostrarVista('vistaExito');
     guardarEnGoogleSheets(payloadFinal);
   }
+
   function enviarWhatsApp() {
     const tarjeta = document.getElementById('lblFolioExito').innerText;
     const asientos = document.getElementById('lblAsientosExito').innerText.replace(/\n/g, ' | ');
